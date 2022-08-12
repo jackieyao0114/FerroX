@@ -60,6 +60,7 @@ void main_main ()
 
     // TDGL right hand side parameters
     Real epsilon_0, epsilonX_fe, epsilonZ_fe, epsilon_de, epsilon_si, alpha, beta, gamma, BigGamma, g11, g44;
+    Real alpha_12, alpha_112, alpha_123; // alpha = 2*alpha_1, beta = 4*alpha_11, gamma = 6*alpha_111
     Real DE_lo, DE_hi, FE_lo, FE_hi, SC_lo, SC_hi;
     Real lambda;
 
@@ -106,6 +107,9 @@ void main_main ()
         pp.get("alpha",alpha);
         pp.get("beta",beta);
         pp.get("gamma",gamma);
+        pp.get("alpha_12",alpha_12);
+        pp.get("alpha_112",alpha_112);
+        pp.get("alpha_123",alpha_123);
         pp.get("BigGamma",BigGamma);
         pp.get("g11",g11);
         pp.get("g44",g44);
@@ -208,13 +212,50 @@ void main_main ()
     DistributionMapping dm(ba);
 
     // we allocate two P multifabs; one will store the old state, the other the new.
-    MultiFab P_old(ba, dm, Ncomp, Nghost);
-    MultiFab P_new(ba, dm, Ncomp, Nghost);
-    MultiFab P_new_pre(ba, dm, Ncomp, Nghost);
+    // MultiFab P_old(ba, dm, Ncomp, Nghost);
+    // MultiFab P_new(ba, dm, Ncomp, Nghost);
+    // MultiFab P_new_pre(ba, dm, Ncomp, Nghost);
     MultiFab Gamma(ba, dm, Ncomp, Nghost);
-    MultiFab GL_rhs(ba, dm, Ncomp, Nghost);
-    MultiFab GL_rhs_pre(ba, dm, Ncomp, Nghost);
-    MultiFab GL_rhs_avg(ba, dm, Ncomp, Nghost);
+    // MultiFab GL_rhs(ba, dm, Ncomp, Nghost);
+    
+    Array<MultiFab, AMREX_SPACEDIM> P_old;
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        P_old[dir].define(ba, dm, Ncomp, Nghost);
+    }
+
+    Array<MultiFab, AMREX_SPACEDIM> P_new;
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        P_new[dir].define(ba, dm, Ncomp, Nghost);
+    }
+
+    Array<MultiFab, AMREX_SPACEDIM> P_new_pre;
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        P_new_pre[dir].define(ba, dm, Ncomp, Nghost);
+    }
+
+    Array<MultiFab, AMREX_SPACEDIM> GL_rhs;
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        GL_rhs[dir].define(ba, dm, Ncomp, Nghost);
+    }
+
+    Array<MultiFab, AMREX_SPACEDIM> GL_rhs_pre;
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        GL_rhs_pre[dir].define(ba, dm, Ncomp, Nghost);
+    }
+
+    Array<MultiFab, AMREX_SPACEDIM> GL_rhs_avg;
+    for (int dir = 0; dir < AMREX_SPACEDIM; dir++)
+    {
+        GL_rhs_avg[dir].define(ba, dm, Ncomp, Nghost);
+    }
+
+    // MultiFab GL_rhs_pre(ba, dm, Ncomp, Nghost);
+    // MultiFab GL_rhs_avg(ba, dm, Ncomp, Nghost);
     MultiFab PoissonRHS(ba, dm, 1, 0);
     MultiFab PoissonPhi(ba, dm, 1, 1);
     MultiFab PoissonPhi_Prev(ba, dm, 1, 1);
@@ -376,6 +417,7 @@ void main_main ()
                           FE_lo, FE_hi, DE_lo, DE_hi, SC_lo, SC_hi, 
                           P_BC_flag_lo, P_BC_flag_hi, Phi_Bc_lo, Phi_Bc_hi, 
                           alpha, beta, gamma, g11, g44, lambda, 
+                          alpha_12, alpha_112, alpha_123,
                           prob_lo, prob_hi, 
                           geom);
 
@@ -459,6 +501,7 @@ void main_main ()
                               FE_lo, FE_hi, DE_lo, DE_hi, SC_lo, SC_hi, 
                               P_BC_flag_lo, P_BC_flag_hi, Phi_Bc_lo, Phi_Bc_hi, 
                               alpha, beta, gamma, g11, g44, lambda, 
+                              alpha_12, alpha_112, alpha_123,
                               prob_lo, prob_hi, 
                               geom);
 
