@@ -1,4 +1,4 @@
-/* Contributors: Prabhat Kumar, Saurabh Sawant
+/* Contributors: Prabhat Kumar, Saurabh Sawant, Zhi Jackie Yao
  *
  */
 #include "FerroX.H"
@@ -176,9 +176,9 @@ int FerroX::plot_charge;
 int FerroX::plot_epsilon;
 int FerroX::plot_mask;
 int FerroX::plot_tphase;
-int FerroX::plot_alpha;
-int FerroX::plot_beta;
-int FerroX::plot_theta;
+int FerroX::plot_angle_alpha;
+int FerroX::plot_angle_beta;
+int FerroX::plot_angle_theta;
 int FerroX::plot_PhiDiff;
 
 
@@ -196,22 +196,22 @@ AMREX_GPU_MANAGED amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> FerroX::Channel_l
 
 // material parameters
 AMREX_GPU_MANAGED amrex::Real FerroX::epsilon_0;
-AMREX_GPU_MANAGED amrex::Real FerroX::epsilonX_fe;
+// AMREX_GPU_MANAGED amrex::Real FerroX::epsilonX_fe;
 AMREX_GPU_MANAGED amrex::Real FerroX::epsilonX_fe_tphase;
-AMREX_GPU_MANAGED amrex::Real FerroX::epsilonZ_fe;
-AMREX_GPU_MANAGED amrex::Real FerroX::epsilon_de;
-AMREX_GPU_MANAGED amrex::Real FerroX::epsilon_si;
-AMREX_GPU_MANAGED amrex::Real FerroX::alpha; // alpha = 2*alpha_1
-AMREX_GPU_MANAGED amrex::Real FerroX::beta; // beta = 4*alpha_11
-AMREX_GPU_MANAGED amrex::Real FerroX::gamma; // gamma = 6*alpha_111
+// AMREX_GPU_MANAGED amrex::Real FerroX::epsilonZ_fe;
+// AMREX_GPU_MANAGED amrex::Real FerroX::epsilon_de;
+// AMREX_GPU_MANAGED amrex::Real FerroX::epsilon_si;
+// AMREX_GPU_MANAGED amrex::Real FerroX::alpha; // alpha = 2*alpha_1
+// AMREX_GPU_MANAGED amrex::Real FerroX::beta; // beta = 4*alpha_11
+// AMREX_GPU_MANAGED amrex::Real FerroX::gamma; // gamma = 6*alpha_111
 AMREX_GPU_MANAGED amrex::Real FerroX::BigGamma;
-AMREX_GPU_MANAGED amrex::Real FerroX::g11;
-AMREX_GPU_MANAGED amrex::Real FerroX::g44;
-AMREX_GPU_MANAGED amrex::Real FerroX::g44_p;
-AMREX_GPU_MANAGED amrex::Real FerroX::g12;
-AMREX_GPU_MANAGED amrex::Real FerroX::alpha_12;
-AMREX_GPU_MANAGED amrex::Real FerroX::alpha_112;
-AMREX_GPU_MANAGED amrex::Real FerroX::alpha_123;
+// AMREX_GPU_MANAGED amrex::Real FerroX::g11;
+// AMREX_GPU_MANAGED amrex::Real FerroX::g44;
+// AMREX_GPU_MANAGED amrex::Real FerroX::g44_p;
+// AMREX_GPU_MANAGED amrex::Real FerroX::g12;
+// AMREX_GPU_MANAGED amrex::Real FerroX::alpha_12;
+// AMREX_GPU_MANAGED amrex::Real FerroX::alpha_112;
+// AMREX_GPU_MANAGED amrex::Real FerroX::alpha_123;
 
 // Constants for SC layer calculations
 AMREX_GPU_MANAGED amrex::Real FerroX::Nc;
@@ -309,12 +309,12 @@ void InitializeFerroXNamespace(const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM
      pp.query("plot_mask",plot_mask); 
      plot_tphase = 1;
      pp.query("plot_tphase",plot_tphase); 
-     plot_alpha = 1 ;
-     pp.query("plot_alpha",plot_alpha); 
-     plot_beta = 1;
-     pp.query("plot_beta",plot_beta); 
-     plot_theta = 1;
-     pp.query("plot_theta",plot_theta); 
+     plot_angle_alpha = 1 ;
+     pp.query("plot_angle_alpha",plot_angle_alpha); 
+     plot_angle_beta = 1;
+     pp.query("plot_angle_beta",plot_angle_beta); 
+     plot_angle_theta = 1;
+     pp.query("plot_angle_theta",plot_angle_theta); 
      plot_PhiDiff = 1;
      pp.query("plot_PhiDiff",plot_PhiDiff); 
 

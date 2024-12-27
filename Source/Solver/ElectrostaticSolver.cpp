@@ -5,11 +5,13 @@
 #include "Utils/FerroXUtils/FerroXUtil.H"
 #include "TotalEnergyDensity.H"
 
-void ComputePoissonRHS(MultiFab&               PoissonRHS,
+void ComputePoissonRHS(MultiFab&                PoissonRHS,
                 Array<MultiFab, AMREX_SPACEDIM> &P_old,
                 MultiFab&                       rho,
-                MultiFab&                 MaterialMask,
-                MultiFab& angle_alpha, MultiFab& angle_beta, MultiFab& angle_theta,
+                MultiFab&                       MaterialMask,
+                MultiFab&                       angle_alpha, 
+                MultiFab&                       angle_beta, 
+                MultiFab&                       angle_theta,
                 const Geometry&                 geom)
 {
     //Real average_P_r = 0.;
@@ -97,14 +99,16 @@ void ComputePoissonRHS(MultiFab&               PoissonRHS,
 void dF_dPhi(MultiFab&            alpha_cc,
              MultiFab&            PoissonRHS, 
              MultiFab&            PoissonPhi, 
-	     Array<MultiFab, AMREX_SPACEDIM>& P_old,
+	         Array<MultiFab, AMREX_SPACEDIM>& P_old,
              MultiFab&            rho,
              MultiFab&            e_den,
              MultiFab&            p_den,
-	     MultiFab&            MaterialMask,
-             MultiFab& angle_alpha, MultiFab& angle_beta, MultiFab& angle_theta,
-             const          Geometry& geom,
-	     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
+	         MultiFab&            MaterialMask,
+             MultiFab&            angle_alpha, 
+             MultiFab&            angle_beta, 
+             MultiFab&            angle_theta,
+             const Geometry&      geom,
+	         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
              const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 
 {
@@ -145,10 +149,12 @@ void ComputePoissonRHS_Newton(MultiFab& PoissonRHS,
 
 void ComputeEfromPhi(MultiFab&                 PoissonPhi,
                 Array<MultiFab, AMREX_SPACEDIM>& E,
-                MultiFab& angle_alpha, MultiFab& angle_beta, MultiFab& angle_theta,
-                const Geometry&                 geom,
-		const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo, 
-		const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
+                MultiFab&                      angle_alpha, 
+                MultiFab&                      angle_beta, 
+                MultiFab&                      angle_theta,
+                const Geometry&                geom,
+		        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo, 
+		        const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 {
        // Calculate E from Phi
 
@@ -678,14 +684,17 @@ void CheckSteadyState(MultiFab& PoissonPhi, MultiFab& PoissonPhi_Old, MultiFab& 
 
 }
 
-void SetupMLMG(std::unique_ptr<amrex::MLMG>& pMLMG, 
-        std::unique_ptr<amrex::MLABecLaplacian>& p_mlabec,
+void SetupMLMG(std::unique_ptr<amrex::MLMG>&                         pMLMG, 
+        std::unique_ptr<amrex::MLABecLaplacian>&                     p_mlabec,
         std::array<std::array<amrex::LinOpBCType,AMREX_SPACEDIM>,2>& LinOpBCType_2d,
-        const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
-        std::array< MultiFab, AMREX_SPACEDIM >& beta_face,
-	Array<MultiFab, AMREX_SPACEDIM>& P_old,
-	MultiFab&      MaterialMask,
-        c_FerroX& rFerroX, MultiFab& PoissonPhi, amrex::Real& time, amrex::LPInfo& info)
+        const amrex::GpuArray<int, AMREX_SPACEDIM>&                  n_cell,
+        std::array< MultiFab, AMREX_SPACEDIM >&                      beta_face,
+	    Array<MultiFab, AMREX_SPACEDIM>&                             P_old,
+	    MultiFab&                                                    MaterialMask,
+        c_FerroX&                                                    rFerroX, 
+        MultiFab&                                                    PoissonPhi, 
+        amrex::Real&                                                 time, 
+        amrex::LPInfo&                                               info)
  {
     auto& rGprop = rFerroX.get_GeometryProperties();
     auto& geom = rGprop.geom;
@@ -809,10 +818,12 @@ void ComputePhi_Rho(std::unique_ptr<amrex::MLMG>& pMLMG,
              MultiFab&            e_den,
              MultiFab&            p_den,
 	         MultiFab&            MaterialMask,
-             MultiFab& angle_alpha, MultiFab& angle_beta, MultiFab& angle_theta,
-             const          Geometry& geom,
-	     const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
-	     const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
+             MultiFab&            angle_alpha, 
+             MultiFab&            angle_beta, 
+             MultiFab&            angle_theta,
+             const Geometry&      geom,
+	         const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
+	         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
              const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 
 {
@@ -884,8 +895,10 @@ void ComputePhi_Rho_EB(std::unique_ptr<amrex::MLMG>& pMLMG,
              MultiFab&            e_den,
              MultiFab&            p_den,
 	         MultiFab&            MaterialMask,
-             MultiFab& angle_alpha, MultiFab& angle_beta, MultiFab& angle_theta,
-             const          Geometry& geom,
+             MultiFab&            angle_alpha, 
+             MultiFab&            angle_beta, 
+             MultiFab&            angle_theta,
+             const Geometry&      geom,
 	         const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
              const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 

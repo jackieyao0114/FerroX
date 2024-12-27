@@ -28,3 +28,19 @@ void InitializeMaterialMask(c_FerroX& rFerroX, const Geometry& geom, MultiFab& M
 void Initialize_tphase_Mask(c_FerroX& rFerroX, const Geometry& geom, MultiFab& tphaseMask);
 void Initialize_Euler_angles(c_FerroX& rFerroX, const Geometry& geom, MultiFab& angle_alpha, MultiFab& angle_beta, MultiFab& angle_theta);
 
+void Initialize_MaterialProperties(c_FerroX& rFerroX, const Geometry& geom, 
+                                   MultiFab& BigGamma,
+                                   MultiFab& alpha, 
+                                   MultiFab& beta, 
+                                   MultiFab& gamma, 
+                                   MultiFab& epsilonX_fe, 
+                                   MultiFab& epsilonZ_fe, 
+                                   MultiFab& epsilon_de, 
+                                   MultiFab& epsilon_si, 
+                                   MultiFab& g11, 
+                                   MultiFab& g44, 
+                                   MultiFab& g44_p, 
+                                   MultiFab& g12, 
+                                   MultiFab& alpha_12, 
+                                   MultiFab& alpha_112, 
+                                   MultiFab& alpha_123);

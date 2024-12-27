@@ -12,9 +12,9 @@ namespace FerroX {
     extern int plot_epsilon;
     extern int plot_mask;
     extern int plot_tphase;
-    extern int plot_alpha;
-    extern int plot_beta;
-    extern int plot_theta;
+    extern int plot_angle_alpha;
+    extern int plot_angle_beta;
+    extern int plot_angle_theta;
     extern int plot_PhiDiff;
 
     // time step

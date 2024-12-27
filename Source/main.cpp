@@ -152,6 +152,22 @@ void main_main (c_FerroX& rFerroX)
 
     //Initialize material mask
     InitializeMaterialMask(MaterialMask, geom, prob_lo, prob_hi);
+    // Initialize material properties
+    Initialize_MaterialProperties(rFerroX, geom, 
+                                   alpha, 
+                                   beta, 
+                                   gamma, 
+                                   epsilonX_fe, 
+                                   epsilonZ_fe, 
+                                   epsilon_de, 
+                                   epsilon_si, 
+                                   g11, 
+                                   g44, 
+                                   g44_p, 
+                                   g12, 
+                                   alpha_12, 
+                                   alpha_112, 
+                                   alpha_123);
     //InitializeMaterialMask(rFerroX, geom, MaterialMask);
     if(Coordinate_Transformation == 1){
        Initialize_tphase_Mask(rFerroX, geom, tphaseMask);

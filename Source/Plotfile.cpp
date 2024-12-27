@@ -85,19 +85,19 @@ void WritePlotfile(c_FerroX& rFerroX,
         var_names.push_back("tphase");
     }
 
-    if (plot_alpha) {
+    if (plot_angle_alpha) {
         ++nvar;
-        var_names.push_back("alpha");
+        var_names.push_back("angle_alpha");
     }
 
-    if (plot_beta) {
+    if (plot_angle_beta) {
         ++nvar;
-        var_names.push_back("beta");
+        var_names.push_back("angle_beta");
     }
 
-    if (plot_theta) {
+    if (plot_angle_theta) {
         ++nvar;
-        var_names.push_back("theta");
+        var_names.push_back("angle_theta");
     }
 
     if (plot_PhiDiff) {
