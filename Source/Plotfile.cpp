@@ -13,6 +13,21 @@ void WritePlotfile(c_FerroX& rFerroX,
                    MultiFab& beta_cc,
                    MultiFab& MaterialMask,
                    MultiFab& tphaseMask,
+                   MultiFab& BigGamma,
+                   MultiFab& alpha, 
+                   MultiFab& beta, 
+                   MultiFab& gamma, 
+                   MultiFab& epsilonX_fe, 
+                   MultiFab& epsilonZ_fe, 
+                   MultiFab& epsilon_de, 
+                   MultiFab& epsilon_si, 
+                   MultiFab& g11, 
+                   MultiFab& g44, 
+                   MultiFab& g44_p, 
+                   MultiFab& g12, 
+                   MultiFab& alpha_12, 
+                   MultiFab& alpha_112, 
+                   MultiFab& alpha_123,
                    MultiFab& angle_alpha,
                    MultiFab& angle_beta,
                    MultiFab& angle_theta,
@@ -83,6 +98,67 @@ void WritePlotfile(c_FerroX& rFerroX,
     if (plot_tphase) {
         ++nvar;
         var_names.push_back("tphase");
+    }
+
+    if (plot_mat_BigGamma) {
+        ++nvar;
+        var_names.push_back("BigGamma");
+    }
+    if (plot_mat_alpha) {
+        ++nvar;
+        var_names.push_back("alpha");
+    }
+    if (plot_mat_beta) {
+        ++nvar;
+        var_names.push_back("beta");
+    }
+    if (plot_mat_gamma) {
+        ++nvar;
+        var_names.push_back("gamma");
+    }
+    if (plot_mat_epsilonX_fe) {
+        ++nvar;
+        var_names.push_back("epsilonX_fe");
+    }
+    if (plot_mat_epsilonZ_fe) {
+        ++nvar;
+        var_names.push_back("epsilonZ_fe");
+    }
+    if (plot_mat_epsilon_de) {
+        ++nvar;
+        var_names.push_back("epsilon_de");
+    }
+    if (plot_mat_epsilon_si) {
+        ++nvar;
+        var_names.push_back("epsilon_si");
+    }
+    if (plot_mat_g11) {
+        ++nvar;
+        var_names.push_back("g11");
+    }
+    if (plot_mat_g44) {
+        ++nvar;
+        var_names.push_back("g44");
+    }
+    if (plot_mat_g44_p) {
+        ++nvar;
+        var_names.push_back("g44_p");
+    }
+    if (plot_mat_g12) {
+        ++nvar;
+        var_names.push_back("g12");
+    }
+    if (plot_mat_alpha_12) {
+        ++nvar;
+        var_names.push_back("alpha_12");
+    }
+    if (plot_mat_alpha_112) {
+        ++nvar;
+        var_names.push_back("alpha_112");
+    }
+    if (plot_mat_alpha_123) {
+        ++nvar;
+        var_names.push_back("alpha_123");
     }
 
     if (plot_angle_alpha) {
@@ -158,15 +234,61 @@ void WritePlotfile(c_FerroX& rFerroX,
         MultiFab::Copy(Plt, tphaseMask, 0, counter++, 1, 0);
     }
 
-    if (plot_alpha) {
+    if (plot_mat_BigGamma) {
+        MultiFab::Copy(Plt, BigGamma, 0, counter++, 1, 0);
+    }
+    if (plot_mat_alpha) {
+        MultiFab::Copy(Plt, alpha, 0, counter++, 1, 0);
+    }
+    if (plot_mat_beta) {
+        MultiFab::Copy(Plt, beta, 0, counter++, 1, 0);
+    }
+    if (plot_mat_gamma) {
+        MultiFab::Copy(Plt, gamma, 0, counter++, 1, 0);
+    }
+    if (plot_mat_epsilonX_fe) {
+        MultiFab::Copy(Plt, epsilonX_fe, 0, counter++, 1, 0);
+    }
+    if (plot_mat_epsilonZ_fe) {
+        MultiFab::Copy(Plt, epsilonZ_fe, 0, counter++, 1, 0);
+    }
+    if (plot_mat_epsilon_de) {
+        MultiFab::Copy(Plt, epsilon_de, 0, counter++, 1, 0);
+    }
+    if (plot_mat_epsilon_si) {
+        MultiFab::Copy(Plt, epsilon_si, 0, counter++, 1, 0);
+    }
+    if (plot_mat_g11) {
+        MultiFab::Copy(Plt, g11, 0, counter++, 1, 0);
+    }
+    if (plot_mat_g44) {
+        MultiFab::Copy(Plt, g44, 0, counter++, 1, 0);
+    }
+    if (plot_mat_g44_p) {
+        MultiFab::Copy(Plt, g44_p, 0, counter++, 1, 0);
+    }
+    if (plot_mat_g12) {
+        MultiFab::Copy(Plt, g12, 0, counter++, 1, 0);
+    }
+    if (plot_mat_alpha_12) {
+        MultiFab::Copy(Plt, alpha_12, 0, counter++, 1, 0);
+    }
+    if (plot_mat_alpha_112) {
+        MultiFab::Copy(Plt, alpha_12, 0, counter++, 1, 0);
+    }
+    if (plot_mat_alpha_123) {
+        MultiFab::Copy(Plt, alpha_123, 0, counter++, 1, 0);
+    }
+
+    if (plot_angle_alpha) {
         MultiFab::Copy(Plt, angle_alpha, 0, counter++, 1, 0);
     }
 
-    if (plot_beta) {
+    if (plot_angle_beta) {
         MultiFab::Copy(Plt, angle_beta, 0, counter++, 1, 0);
     }
 
-    if (plot_theta) {
+    if (plot_angle_theta) {
         MultiFab::Copy(Plt, angle_theta, 0, counter++, 1, 0);
     }
 

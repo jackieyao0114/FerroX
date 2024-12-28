@@ -222,12 +222,15 @@ void ComputeEfromPhi(MultiFab&                 PoissonPhi,
 
 void InitializePermittivity(std::array<std::array<amrex::LinOpBCType,AMREX_SPACEDIM>,2>& LinOpBCType_2d, 
 		MultiFab& beta_cc,
-	       	const MultiFab& MaterialMask,
-	       	const MultiFab& tphaseMask,
-	       	const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
-	       	const Geometry& geom, 
+        MultiFab& epsilonX_fe,
+        MultiFab& epsilon_de,
+        MultiFab& epsilon_si,
+	    const MultiFab& MaterialMask,
+	    const MultiFab& tphaseMask,
+	    const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
+	    const Geometry& geom, 
 		const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
-	       	const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
+	    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 {
 
     beta_cc.setVal(0.0);
@@ -240,6 +243,9 @@ void InitializePermittivity(std::array<std::array<amrex::LinOpBCType,AMREX_SPACE
         const Box& bx = mfi.validbox();
 
         const Array4<Real>& beta = beta_cc.array(mfi);
+        const Array4<Real>& mat_epsilonX_fe = epsilonX_fe.array(mfi);
+        const Array4<Real>& mat_epsilon_de = epsilon_de.array(mfi);
+        const Array4<Real>& mat_epsilon_si = epsilon_si.array(mfi);
         const Array4<Real const>& mask = MaterialMask.array(mfi);
         const Array4<Real const>& tphase = tphaseMask.array(mfi);
 
@@ -254,18 +260,21 @@ void InitializePermittivity(std::array<std::array<amrex::LinOpBCType,AMREX_SPACE
 	  Real z = prob_lo[1] + (k+0.5) * dx[2];
 	
           if(mask(i,j,k) == 0.0) {
-             beta(i,j,k) = epsilonX_fe * epsilon_0; //FE layer
+             beta(i,j,k) = mat_epsilonX_fe(i,j,k) * epsilon_0; //FE layer
+            //  beta(i,j,k) = 600 * epsilon_0;
+            //  printf("epsilon in FE is %g \n", beta(i,j,k));
 	     //set t_phase beta to epsilonX_fe_tphase
 	     //if(x <= t_phase_hi[0] && x >= t_phase_lo[0] && y <= t_phase_hi[1] && y >= t_phase_lo[1] && z <= t_phase_hi[2] && z >= t_phase_lo[2]){
 	     if(tphase(i,j,k) == 1.0){
                beta(i,j,k) = epsilonX_fe_tphase * epsilon_0;
              }
           } else if(mask(i,j,k) == 1.0) {
-             beta(i,j,k) = epsilon_de * epsilon_0; //DE layer
+             beta(i,j,k) = mat_epsilon_de(i,j,k) * epsilon_0; //DE layer
+            //  printf("epsilon in DE is %g \n", beta(i,j,k));
           } else if (mask(i,j,k) >= 2.0){
-             beta(i,j,k) = epsilon_si * epsilon_0; //SC layer
+             beta(i,j,k) = mat_epsilon_si(i,j,k) * epsilon_0; //SC layer
           } else {
-             beta(i,j,k) = epsilon_de * epsilon_0; //Spacer is same as DE
+             beta(i,j,k) = mat_epsilon_de(i,j,k) * epsilon_0; //Spacer is same as DE
 	  }
 
         });
@@ -748,7 +757,10 @@ void SetupMLMG(std::unique_ptr<amrex::MLMG>&                         pMLMG,
         const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
         std::array< MultiFab, AMREX_SPACEDIM >& beta_face,
         MultiFab& beta_cc,
-        c_FerroX& rFerroX, MultiFab& PoissonPhi, amrex::Real& time, amrex::LPInfo& info)
+        c_FerroX& rFerroX, 
+        MultiFab& PoissonPhi, 
+        amrex::Real& time, 
+        amrex::LPInfo& info)
  {
     auto& rGprop = rFerroX.get_GeometryProperties();
     auto& geom = rGprop.geom;

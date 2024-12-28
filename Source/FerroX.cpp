@@ -176,6 +176,21 @@ int FerroX::plot_charge;
 int FerroX::plot_epsilon;
 int FerroX::plot_mask;
 int FerroX::plot_tphase;
+int FerroX::plot_mat_BigGamma;
+int FerroX::plot_mat_alpha;
+int FerroX::plot_mat_beta;
+int FerroX::plot_mat_gamma;
+int FerroX::plot_mat_epsilonX_fe;
+int FerroX::plot_mat_epsilonZ_fe;
+int FerroX::plot_mat_epsilon_de;
+int FerroX::plot_mat_epsilon_si;
+int FerroX::plot_mat_g11;
+int FerroX::plot_mat_g44;
+int FerroX::plot_mat_g44_p;
+int FerroX::plot_mat_g12;
+int FerroX::plot_mat_alpha_12;
+int FerroX::plot_mat_alpha_112;
+int FerroX::plot_mat_alpha_123;
 int FerroX::plot_angle_alpha;
 int FerroX::plot_angle_beta;
 int FerroX::plot_angle_theta;
@@ -204,7 +219,7 @@ AMREX_GPU_MANAGED amrex::Real FerroX::epsilonX_fe_tphase;
 // AMREX_GPU_MANAGED amrex::Real FerroX::alpha; // alpha = 2*alpha_1
 // AMREX_GPU_MANAGED amrex::Real FerroX::beta; // beta = 4*alpha_11
 // AMREX_GPU_MANAGED amrex::Real FerroX::gamma; // gamma = 6*alpha_111
-AMREX_GPU_MANAGED amrex::Real FerroX::BigGamma;
+// AMREX_GPU_MANAGED amrex::Real FerroX::BigGamma;
 // AMREX_GPU_MANAGED amrex::Real FerroX::g11;
 // AMREX_GPU_MANAGED amrex::Real FerroX::g44;
 // AMREX_GPU_MANAGED amrex::Real FerroX::g44_p;
@@ -309,6 +324,38 @@ void InitializeFerroXNamespace(const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM
      pp.query("plot_mask",plot_mask); 
      plot_tphase = 1;
      pp.query("plot_tphase",plot_tphase); 
+
+     plot_mat_BigGamma = 1;
+     pp.query("plot_mat_BigGamma",plot_mat_BigGamma); 
+     plot_mat_alpha = 1;
+     pp.query("plot_mat_alpha",plot_mat_alpha); 
+     plot_mat_beta = 1;
+     pp.query("plot_mat_beta",plot_mat_beta); 
+     plot_mat_gamma = 1;
+     pp.query("plot_mat_gamma",plot_mat_gamma); 
+     plot_mat_epsilonX_fe = 1;
+     pp.query("plot_mat_epsilonX_fe",plot_mat_epsilonX_fe); 
+     plot_mat_epsilonZ_fe = 1;
+     pp.query("plot_mat_epsilonZ_fe",plot_mat_epsilonZ_fe); 
+     plot_mat_epsilon_de = 1;
+     pp.query("plot_mat_epsilon_de",plot_mat_epsilon_de); 
+     plot_mat_epsilon_si = 1;
+     pp.query("plot_mat_epsilon_si",plot_mat_epsilon_si); 
+     plot_mat_g11 = 1;
+     pp.query("plot_mat_g11",plot_mat_g11); 
+     plot_mat_g44 = 1;
+     pp.query("plot_mat_g44",plot_mat_g44); 
+     plot_mat_g44_p = 1;
+     pp.query("plot_mat_g44_p",plot_mat_g44_p); 
+     plot_mat_g12 = 1;
+     pp.query("plot_mat_g12",plot_mat_g12); 
+     plot_mat_alpha_12 = 1;
+     pp.query("plot_mat_alpha_12",plot_mat_alpha_12); 
+     plot_mat_alpha_112 = 1;
+     pp.query("plot_mat_alpha_112",plot_mat_alpha_112); 
+     plot_mat_alpha_123 = 1;
+     pp.query("plot_mat_alpha_123",plot_mat_alpha_123); 
+
      plot_angle_alpha = 1 ;
      pp.query("plot_angle_alpha",plot_angle_alpha); 
      plot_angle_beta = 1;
@@ -331,25 +378,25 @@ void InitializeFerroXNamespace(const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM
      // Material Properties
 
      pp.get("epsilon_0",epsilon_0); // epsilon_0
-     pp.get("epsilonX_fe",epsilonX_fe);// epsilon_r for FE
+    //  pp.get("epsilonX_fe",epsilonX_fe);// epsilon_r for FE
 
-     epsilonX_fe_tphase = epsilonX_fe;
+    //  epsilonX_fe_tphase = epsilonX_fe;
      pp.query("epsilonX_fe_tphase",epsilonX_fe_tphase);
 
-     pp.get("epsilonZ_fe",epsilonZ_fe);// epsilon_r for FE
-     pp.get("epsilon_de",epsilon_de);// epsilon_r for DE
-     pp.get("epsilon_si",epsilon_si);// epsilon_r for SC
-     pp.get("alpha",alpha);
-     pp.get("beta",beta);
-     pp.get("gamma",FerroX::gamma);
-     pp.get("alpha_12",alpha_12);
-     pp.get("alpha_112",alpha_112);
-     pp.get("alpha_123",alpha_123);
-     pp.get("BigGamma",BigGamma);
-     pp.get("g11",g11);
-     pp.get("g44",g44);
-     pp.get("g12",g12);
-     pp.get("g44_p",g44_p);
+    //  pp.get("epsilonZ_fe",epsilonZ_fe);// epsilon_r for FE
+    //  pp.get("epsilon_de",epsilon_de);// epsilon_r for DE
+    //  pp.get("epsilon_si",epsilon_si);// epsilon_r for SC
+    //  pp.get("alpha",alpha);
+    //  pp.get("beta",beta);
+    //  pp.get("gamma",FerroX::gamma);
+    //  pp.get("alpha_12",alpha_12);
+    //  pp.get("alpha_112",alpha_112);
+    //  pp.get("alpha_123",alpha_123);
+    //  pp.get("BigGamma",BigGamma);
+    //  pp.get("g11",g11);
+    //  pp.get("g44",g44);
+    //  pp.get("g12",g12);
+    //  pp.get("g44_p",g44_p);
 
      pp.get("lambda",lambda);
 

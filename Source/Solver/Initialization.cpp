@@ -4,15 +4,15 @@
 
 // INITIALIZE rho in SC region
 void InitializePandRho(Array<MultiFab, AMREX_SPACEDIM> &P_old,
-                   MultiFab&   Gamma,
+                   MultiFab&   BigGamma,
                    MultiFab&   rho,
                    MultiFab&   e_den,
                    MultiFab&   p_den,
-		   const MultiFab& MaterialMask,
-		   const MultiFab& tphaseMask,
+		           const MultiFab& MaterialMask,
+		           const MultiFab& tphaseMask,
                    const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell,
                    const       Geometry& geom,
-		   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
+		           const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
                    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 {
 
@@ -73,7 +73,7 @@ void InitializePandRho(Array<MultiFab, AMREX_SPACEDIM> &P_old,
         const Array4<Real> &pOld_p = P_old[0].array(mfi);
         const Array4<Real> &pOld_q = P_old[1].array(mfi);
         const Array4<Real> &pOld_r = P_old[2].array(mfi);
-        const Array4<Real>& Gam = Gamma.array(mfi);
+        const Array4<Real>& mat_BigGamma = BigGamma.array(mfi);
         const Array4<Real const>& mask = MaterialMask.array(mfi);
         const Array4<Real const>& tphase = tphaseMask.array(mfi);
 
@@ -110,8 +110,6 @@ void InitializePandRho(Array<MultiFab, AMREX_SPACEDIM> &P_old,
 
                }
 
-               Gam(i,j,k) = BigGamma;
-
 	       //set t_phase Pz to zero
 	       //if(x <= t_phase_hi[0] && x >= t_phase_lo[0] && y <= t_phase_hi[1] && y >= t_phase_lo[1] && z <= t_phase_hi[2] && z >= t_phase_lo[2]){
 	       if(tphase(i,j,k) == 1.0){
@@ -122,7 +120,7 @@ void InitializePandRho(Array<MultiFab, AMREX_SPACEDIM> &P_old,
                pOld_p(i,j,k) = 0.0;
                pOld_q(i,j,k) = 0.0;
                pOld_r(i,j,k) = 0.0;
-               Gam(i,j,k) = 0.0;
+               mat_BigGamma(i,j,k) = 0.0; // Note this is overwriting the initialized Gamma, therefore this function must be called after InitializeMaterialProperties
             }
 
 	    if (is_polarization_scalar == 1){
@@ -167,8 +165,8 @@ void InitializePandRho(Array<MultiFab, AMREX_SPACEDIM> &P_old,
 
 // create a mask filled with integers to idetify different material types
 void InitializeMaterialMask(MultiFab& MaterialMask, 
-		            const Geometry& geom, 
-			    const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
+		                    const Geometry& geom, 
+			                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_lo,
                             const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& prob_hi)
 {
     // loop over boxes
@@ -223,30 +221,30 @@ void InitializeMaterialMask(c_FerroX& rFerroX, const Geometry& geom, MultiFab& M
        // const auto& bx = mfi.tilebox();
         const Box& bx = mfi.growntilebox(MaterialMask.nGrow());
 
-	std::string m_mask_s;
-	std::unique_ptr<amrex::Parser> m_mask_parser;
+	    std::string m_mask_s;
+	    std::unique_ptr<amrex::Parser> m_mask_parser;
         std::string m_str_device_geom_function;
 
-	ParmParse pp_mask("device_geom");
+	    ParmParse pp_mask("device_geom");
 
 
-	if (pp_mask.query("device_geom_function(x,y,z)", m_str_device_geom_function) ) {
-            m_mask_s = "parse_device_geom_function";
-        }
+        if (pp_mask.query("device_geom_function(x,y,z)", m_str_device_geom_function) ) {
+                m_mask_s = "parse_device_geom_function";
+            }
 
-        if (m_mask_s == "parse_device_geom_function") {
-            Store_parserString(pp_mask, "device_geom_function(x,y,z)", m_str_device_geom_function);
-            m_mask_parser = std::make_unique<amrex::Parser>(
-                                     makeParser(m_str_device_geom_function,{"x","y","z"}));
-        }
+            if (m_mask_s == "parse_device_geom_function") {
+                Store_parserString(pp_mask, "device_geom_function(x,y,z)", m_str_device_geom_function);
+                m_mask_parser = std::make_unique<amrex::Parser>(
+                                        makeParser(m_str_device_geom_function,{"x","y","z"}));
+            }
 
-        const auto& macro_parser = m_mask_parser->compile<3>();
+            const auto& macro_parser = m_mask_parser->compile<3>();
 
-        amrex::ParallelFor(bx,
-        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-        {
-            eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv,macro_parser,mask_arr);
-        });
+            amrex::ParallelFor(bx,
+            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+            {
+                eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv,macro_parser,mask_arr);
+            });
 
     }
 	MaterialMask.FillBoundary(geom.periodicity());
@@ -316,53 +314,48 @@ void Initialize_Euler_angles(c_FerroX& rFerroX, const Geometry& geom, MultiFab& 
         const auto& angle_theta_arr = angle_theta.array(mfi);
         const auto& bx = mfi.tilebox();
 
-	std::string angle_alpha_s;
-	std::unique_ptr<amrex::Parser> angle_alpha_parser;
+	    std::string angle_alpha_s;
+	    std::unique_ptr<amrex::Parser> angle_alpha_parser;
         std::string m_str_angle_alpha_function;
 
-	std::string angle_beta_s;
-	std::unique_ptr<amrex::Parser> angle_beta_parser;
+	    std::string angle_beta_s;
+	    std::unique_ptr<amrex::Parser> angle_beta_parser;
         std::string m_str_angle_beta_function;
 
-	std::string angle_theta_s;
-	std::unique_ptr<amrex::Parser> angle_theta_parser;
+	    std::string angle_theta_s;
+	    std::unique_ptr<amrex::Parser> angle_theta_parser;
         std::string m_str_angle_theta_function;
 
-	ParmParse pp_angle_alpha("angle_alpha");
+	    ParmParse pp_mask("o_phase_angle");
 
 
-	if (pp_angle_alpha.query("angle_alpha_function(x,y,z)", m_str_angle_alpha_function) ) {
+	    if (pp_mask.query("angle_alpha_function(x,y,z)", m_str_angle_alpha_function) ) {
             angle_alpha_s = "parse_angle_alpha_function";
         }
 
         if (angle_alpha_s == "parse_angle_alpha_function") {
-            Store_parserString(pp_angle_alpha, "angle_alpha_function(x,y,z)", m_str_angle_alpha_function);
+            Store_parserString(pp_mask, "angle_alpha_function(x,y,z)", m_str_angle_alpha_function);
             angle_alpha_parser = std::make_unique<amrex::Parser>(
                                      makeParser(m_str_angle_alpha_function,{"x","y","z"}));
         }
 
-	ParmParse pp_angle_beta("angle_beta");
 
-
-	if (pp_angle_beta.query("angle_beta_function(x,y,z)", m_str_angle_beta_function) ) {
+	    if (pp_mask.query("angle_beta_function(x,y,z)", m_str_angle_beta_function) ) {
             angle_beta_s = "parse_angle_beta_function";
         }
 
         if (angle_beta_s == "parse_angle_beta_function") {
-            Store_parserString(pp_angle_beta, "angle_beta_function(x,y,z)", m_str_angle_beta_function);
+            Store_parserString(pp_mask, "angle_beta_function(x,y,z)", m_str_angle_beta_function);
             angle_beta_parser = std::make_unique<amrex::Parser>(
                                      makeParser(m_str_angle_beta_function,{"x","y","z"}));
         }
 
-	ParmParse pp_angle_theta("angle_theta");
-
-
-	if (pp_angle_theta.query("angle_theta_function(x,y,z)", m_str_angle_theta_function) ) {
+	    if (pp_mask.query("angle_theta_function(x,y,z)", m_str_angle_theta_function) ) {
             angle_theta_s = "parse_angle_theta_function";
         }
 
         if (angle_theta_s == "parse_angle_theta_function") {
-            Store_parserString(pp_angle_theta, "angle_theta_function(x,y,z)", m_str_angle_theta_function);
+            Store_parserString(pp_mask, "angle_theta_function(x,y,z)", m_str_angle_theta_function);
             angle_theta_parser = std::make_unique<amrex::Parser>(
                                      makeParser(m_str_angle_theta_function,{"x","y","z"}));
         }
@@ -503,112 +496,139 @@ void Initialize_MaterialProperties(c_FerroX& rFerroX, const Geometry& geom,
         std::unique_ptr<amrex::Parser> mat_alpha_123_parser;
         std::string m_str_mat_alpha_123_function;
 
-        ParmParse pp_mat_BigGamma("BigGamma");
-        if (pp_mat_BigGamma.query("landau_BigGamma_function(x,y,z)", m_str_mat_BigGamma_function) ) {
-                mat_BigGamma_s = "parse_landau_BigGamma_function";
+        ParmParse pp_mask("material_properties");
+
+        if (pp_mask.query("BigGamma_function(x,y,z)", m_str_mat_BigGamma_function) ) {
+                mat_BigGamma_s = "parse_BigGamma_function";
             }
-        if (mat_BigGamma_s == "parse_landau_BigGamma_function") {
-                Store_parserString(pp_mat_BigGamma, "landau_BigGamma_function(x,y,z)", m_str_mat_BigGamma_function);
+        if (mat_BigGamma_s == "parse_BigGamma_function") {
+                Store_parserString(pp_mask, "BigGamma_function(x,y,z)", m_str_mat_BigGamma_function);
                 mat_BigGamma_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_BigGamma_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_alpha("alpha");
-        if (pp_mat_alpha.query("landau_alpha_function(x,y,z)", m_str_mat_alpha_function) ) {
+        if (pp_mask.query("landau_alpha_function(x,y,z)", m_str_mat_alpha_function) ) {
                 mat_alpha_s = "parse_landau_alpha_function";
             }
         if (mat_alpha_s == "parse_landau_alpha_function") {
-                Store_parserString(pp_mat_alpha, "landau_alpha_function(x,y,z)", m_str_mat_alpha_function);
+                Store_parserString(pp_mask, "landau_alpha_function(x,y,z)", m_str_mat_alpha_function);
                 mat_alpha_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_alpha_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_beta("beta");
-        if (pp_mat_beta.query("landau_beta_function(x,y,z)", m_str_mat_beta_function) ) {
+        if (pp_mask.query("landau_beta_function(x,y,z)", m_str_mat_beta_function) ) {
                 mat_beta_s = "parse_landau_beta_function";
             }
         if (mat_beta_s == "parse_landau_beta_function") {
-            Store_parserString(pp_mat_beta, "landau_beta_function(x,y,z)", m_str_mat_beta_function);
+            Store_parserString(pp_mask, "landau_beta_function(x,y,z)", m_str_mat_beta_function);
             mat_beta_parser = std::make_unique<amrex::Parser>(
                                     makeParser(m_str_mat_beta_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_gamma("gamma");
-        if (pp_mat_gamma.query("landau_gamma_function(x,y,z)", m_str_mat_gamma_function) ) {
+        if (pp_mask.query("landau_gamma_function(x,y,z)", m_str_mat_gamma_function) ) {
                 mat_gamma_s = "parse_landau_gamma_function";
             }
         if (mat_gamma_s == "parse_landau_gamma_function") {
-                Store_parserString(pp_mat_gamma, "landau_gamma_function(x,y,z)", m_str_mat_gamma_function);
+                Store_parserString(pp_mask, "landau_gamma_function(x,y,z)", m_str_mat_gamma_function);
                 mat_gamma_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_gamma_function,{"x","y","z"}));
             }
+        
+        if (pp_mask.query("epsilonX_fe_function(x,y,z)", m_str_mat_epsilonX_fe_function) ) {
+                mat_epsilonX_fe_s = "parse_epsilonX_fe_function";
+            }
+        if (mat_epsilonX_fe_s == "parse_epsilonX_fe_function") {
+                Store_parserString(pp_mask, "epsilonX_fe_function(x,y,z)", m_str_mat_epsilonX_fe_function);
+                mat_epsilonX_fe_parser = std::make_unique<amrex::Parser>(
+                                        makeParser(m_str_mat_epsilonX_fe_function,{"x","y","z"}));
+            }
+        
+        if (pp_mask.query("epsilonZ_fe_function(x,y,z)", m_str_mat_epsilonZ_fe_function) ) {
+                mat_epsilonZ_fe_s = "parse_epsilonZ_fe_function";
+            }
+        if (mat_epsilonZ_fe_s == "parse_epsilonZ_fe_function") {
+                Store_parserString(pp_mask, "epsilonZ_fe_function(x,y,z)", m_str_mat_epsilonZ_fe_function);
+                mat_epsilonZ_fe_parser = std::make_unique<amrex::Parser>(
+                                        makeParser(m_str_mat_epsilonZ_fe_function,{"x","y","z"}));
+            }
+        
+        if (pp_mask.query("epsilon_de_function(x,y,z)", m_str_mat_epsilon_de_function) ) {
+                mat_epsilon_de_s = "parse_epsilon_de_function";
+            }
+        if (mat_epsilon_de_s == "parse_epsilon_de_function") {
+                Store_parserString(pp_mask, "epsilon_de_function(x,y,z)", m_str_mat_epsilon_de_function);
+                mat_epsilon_de_parser = std::make_unique<amrex::Parser>(
+                                        makeParser(m_str_mat_epsilon_de_function,{"x","y","z"}));
+            }
+        
+        if (pp_mask.query("epsilon_si_function(x,y,z)", m_str_mat_epsilon_si_function) ) {
+                mat_epsilon_si_s = "parse_epsilon_si_function";
+            }
+        if (mat_epsilon_si_s == "parse_epsilon_si_function") {
+                Store_parserString(pp_mask, "epsilon_si_function(x,y,z)", m_str_mat_epsilon_si_function);
+                mat_epsilon_si_parser = std::make_unique<amrex::Parser>(
+                                        makeParser(m_str_mat_epsilon_si_function,{"x","y","z"}));
+            }
 
-        ParmParse pp_mat_g11("g11");
-        if (pp_mat_g11.query("g11_function(x,y,z)", m_str_mat_g11_function) ) {
+        if (pp_mask.query("g11_function(x,y,z)", m_str_mat_g11_function) ) {
                 mat_g11_s = "parse_g11_function";
             }
         if (mat_g11_s == "parse_g11_function") {
-                Store_parserString(pp_mat_g11, "g11_function(x,y,z)", m_str_mat_g11_function);
+                Store_parserString(pp_mask, "g11_function(x,y,z)", m_str_mat_g11_function);
                 mat_g11_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_g11_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_g44("g44");
-        if (pp_mat_g44.query("g44_function(x,y,z)", m_str_mat_g44_function) ) {
+        if (pp_mask.query("g44_function(x,y,z)", m_str_mat_g44_function) ) {
                 mat_g44_s = "parse_g44_function";
             }
         if (mat_g44_s == "parse_g44_function") {
-                Store_parserString(pp_mat_g44, "g44_function(x,y,z)", m_str_mat_g44_function);
+                Store_parserString(pp_mask, "g44_function(x,y,z)", m_str_mat_g44_function);
                 mat_g44_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_g44_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_g44_p("g44_p");
-        if (pp_mat_g44_p.query("g44_p_function(x,y,z)", m_str_mat_g44_p_function) ) {
+        if (pp_mask.query("g44_p_function(x,y,z)", m_str_mat_g44_p_function) ) {
                 mat_g44_p_s = "parse_g44_p_function";
             }
         if (mat_g44_p_s == "parse_g44_p_function") {
-                Store_parserString(pp_mat_g44_p, "g44_p_function(x,y,z)", m_str_mat_g44_p_function);
+                Store_parserString(pp_mask, "g44_p_function(x,y,z)", m_str_mat_g44_p_function);
                 mat_g44_p_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_g44_p_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_g12("g12");
-        if (pp_mat_g12.query("g12_function(x,y,z)", m_str_mat_g12_function) ) {
+        if (pp_mask.query("g12_function(x,y,z)", m_str_mat_g12_function) ) {
                 mat_g12_s = "parse_g12_function";
             }
         if (mat_g12_s == "parse_g12_function") {
-                Store_parserString(pp_mat_g12, "g12_function(x,y,z)", m_str_mat_g12_function);
+                Store_parserString(pp_mask, "g12_function(x,y,z)", m_str_mat_g12_function);
                 mat_g12_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_g12_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_alpha_12("alpha_12");
-        if (pp_mat_alpha_12.query("alpha_12_function(x,y,z)", m_str_mat_alpha_12_function) ) {
+        if (pp_mask.query("alpha_12_function(x,y,z)", m_str_mat_alpha_12_function) ) {
                 mat_alpha_12_s = "parse_alpha_12_function";
             }
         if (mat_alpha_12_s == "parse_alpha_12_function") {
-                Store_parserString(pp_mat_alpha_12, "alpha_12_function(x,y,z)", m_str_mat_alpha_12_function);
+                Store_parserString(pp_mask, "alpha_12_function(x,y,z)", m_str_mat_alpha_12_function);
                 mat_alpha_12_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_alpha_12_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_alpha_112("alpha_112");
-        if (pp_mat_alpha_112.query("alpha_112_function(x,y,z)", m_str_mat_alpha_112_function) ) {
+        if (pp_mask.query("alpha_112_function(x,y,z)", m_str_mat_alpha_112_function) ) {
                 mat_alpha_112_s = "parse_alpha_112_function";
             }
         if (mat_alpha_112_s == "parse_alpha_112_function") {
-                Store_parserString(pp_mat_alpha_112, "alpha_112_function(x,y,z)", m_str_mat_alpha_112_function);
+                Store_parserString(pp_mask, "alpha_112_function(x,y,z)", m_str_mat_alpha_112_function);
                 mat_alpha_112_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_alpha_112_function,{"x","y","z"}));
             }
 
-        ParmParse pp_mat_alpha_123("alpha_123");
-        if (pp_mat_alpha_123.query("alpha_123_function(x,y,z)", m_str_mat_alpha_123_function) ) {
+        if (pp_mask.query("alpha_123_function(x,y,z)", m_str_mat_alpha_123_function) ) {
                 mat_alpha_123_s = "parse_alpha_123_function";
             }
         if (mat_alpha_123_s == "parse_alpha_123_function") {
-                Store_parserString(pp_mat_alpha_123, "alpha_123_function(x,y,z)", m_str_mat_alpha_123_function);
+                Store_parserString(pp_mask, "alpha_123_function(x,y,z)", m_str_mat_alpha_123_function);
                 mat_alpha_123_parser = std::make_unique<amrex::Parser>(
                                         makeParser(m_str_mat_alpha_123_function,{"x","y","z"}));
             }
@@ -617,6 +637,10 @@ void Initialize_MaterialProperties(c_FerroX& rFerroX, const Geometry& geom,
         const auto& macro_parser_mat_alpha = mat_alpha_parser->compile<3>();
         const auto& macro_parser_mat_beta = mat_beta_parser->compile<3>();
         const auto& macro_parser_mat_gamma = mat_gamma_parser->compile<3>();
+        const auto& macro_parser_mat_epsilonX_fe = mat_epsilonX_fe_parser->compile<3>();
+        const auto& macro_parser_mat_epsilonZ_fe = mat_epsilonZ_fe_parser->compile<3>();
+        const auto& macro_parser_mat_epsilon_de = mat_epsilon_de_parser->compile<3>();
+        const auto& macro_parser_mat_epsilon_si = mat_epsilon_si_parser->compile<3>();
         const auto& macro_parser_mat_g11 = mat_g11_parser->compile<3>();
         const auto& macro_parser_mat_g44 = mat_g44_parser->compile<3>();
         const auto& macro_parser_mat_g44_p = mat_g44_p_parser->compile<3>();
@@ -632,6 +656,10 @@ void Initialize_MaterialProperties(c_FerroX& rFerroX, const Geometry& geom,
                 eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_BigGamma,macro_parser_mat_BigGamma,mat_BigGamma_arr);
                 eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_beta, macro_parser_mat_beta, mat_beta_arr );
                 eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_gamma,macro_parser_mat_gamma,mat_gamma_arr);
+                eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_epsilonX_fe,macro_parser_mat_epsilonX_fe,mat_epsilonX_fe_arr);
+                eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_epsilonZ_fe,macro_parser_mat_epsilonZ_fe,mat_epsilonZ_fe_arr);
+                eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_epsilon_de,macro_parser_mat_epsilon_de,mat_epsilon_de_arr);
+                eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_epsilon_si,macro_parser_mat_epsilon_si,mat_epsilon_si_arr);
                 eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_g11,macro_parser_mat_g11,mat_g11_arr);
                 eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_g44,macro_parser_mat_g44,mat_g44_arr);
                 eXstatic_MFab_Util::ConvertParserIntoMultiFab_3vars(i,j,k,dx,real_box,iv_mat_g44_p,macro_parser_mat_g44_p,mat_g44_p_arr);
@@ -642,15 +670,19 @@ void Initialize_MaterialProperties(c_FerroX& rFerroX, const Geometry& geom,
             });
 
     }
-	mat_BigGamma.FillBoundary(geom.periodicity());
-	mat_alpha.FillBoundary(geom.periodicity());
-	mat_beta.FillBoundary(geom.periodicity());
-	mat_gamma.FillBoundary(geom.periodicity());
-    mat_g11.FillBoundary(geom.periodicity());
-    mat_g44.FillBoundary(geom.periodicity());
-    mat_g44_p.FillBoundary(geom.periodicity());
-    mat_g12.FillBoundary(geom.periodicity());
-    mat_alpha_12.FillBoundary(geom.periodicity());
-    mat_alpha_112.FillBoundary(geom.periodicity());
-    mat_alpha_123.FillBoundary(geom.periodicity());
+	BigGamma.FillBoundary(geom.periodicity());
+	alpha.FillBoundary(geom.periodicity());
+	beta.FillBoundary(geom.periodicity());
+	gamma.FillBoundary(geom.periodicity());
+	epsilonX_fe.FillBoundary(geom.periodicity());
+	epsilonZ_fe.FillBoundary(geom.periodicity());
+	epsilon_de.FillBoundary(geom.periodicity());
+	epsilon_si.FillBoundary(geom.periodicity());
+    g11.FillBoundary(geom.periodicity());
+    g44.FillBoundary(geom.periodicity());
+    g44_p.FillBoundary(geom.periodicity());
+    g12.FillBoundary(geom.periodicity());
+    alpha_12.FillBoundary(geom.periodicity());
+    alpha_112.FillBoundary(geom.periodicity());
+    alpha_123.FillBoundary(geom.periodicity());
 }
