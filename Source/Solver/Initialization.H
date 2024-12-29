@@ -44,3 +44,7 @@ void Initialize_MaterialProperties(c_FerroX& rFerroX, const Geometry& geom,
                                    MultiFab& alpha_12, 
                                    MultiFab& alpha_112, 
                                    MultiFab& alpha_123);
+
+void SetHardToSwitchNucleation(MultiFab& alpha, 
+                                MultiFab& NucleationMask, 
+                                const amrex::GpuArray<int, AMREX_SPACEDIM>& n_cell);
